@@ -18,7 +18,7 @@ class _HomeState extends State<Home> {
   List<String> measurements = ["Metric", "Imperial"];
   List<String> genders = ["Male", "Female"];
   String currMeasurement = "Metric";
-  bool _isApply = false;
+  bool _isError = false;
   String currGender = "Male";
   TextEditingController weight = TextEditingController();
   TextEditingController height = TextEditingController();
@@ -60,6 +60,12 @@ class _HomeState extends State<Home> {
                   onChanged: (String? newValue) {
                     setState(() {
                       currMeasurement = newValue!;
+                      _isError = false;
+                      weight.clear();
+                      height.clear();
+                      feet.clear();
+                      inches.clear();
+                      age.clear();
                       if (newValue == "Metric") {
                         measurements[0] = "Metric";
                         measurements[1] = "Imperial";
@@ -68,14 +74,6 @@ class _HomeState extends State<Home> {
                         measurements[1] = "Metric";
                       }
                       Navigator.of(context, rootNavigator: true).pop('dialog');
-                    });
-                    setState(() {
-                      currMeasurement = newValue!;
-                      weight.clear();
-                      height.clear();
-                      feet.clear();
-                      inches.clear();
-                      age.clear();
                     });
                   },
                   items: measurements
@@ -95,16 +93,8 @@ class _HomeState extends State<Home> {
         });
   }
 
-  void showResult(BuildContext context) {
-    setState(() {
-      _isApply = true;
-      weight = weight;
-      height = height;
-      age = age;
-      feet = feet;
-      inches = inches;
-    });
-    var result;
+  List calculateScore() {
+    List result = [];
     if (weight.text.isNotEmpty &&
         height.text.isNotEmpty &&
         age.text.isNotEmpty) {
@@ -114,17 +104,6 @@ class _HomeState extends State<Home> {
               10000)
           .toString()
           .split(".");
-      print(
-          "$result, ${(double.parse(weight.text) / double.parse(height.text) / double.parse(height.text)) * 10000}");
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => ResultScreen([
-                  double.parse("${result[0]}.${result[1][1]}"),
-                  int.parse(age.text),
-                  currGender
-                ])),
-      );
     } else if (weight.text.isNotEmpty &&
         feet.text.isNotEmpty &&
         age.text.isNotEmpty) {
@@ -134,24 +113,37 @@ class _HomeState extends State<Home> {
               703)
           .toString()
           .split(".");
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => ResultScreen([
-                  double.parse("${result[0]}.${result[1][1]}"),
-                  int.parse(age.text),
-                  currGender
-                ])),
-      );
+    }
+    return result;
+  }
+
+  void goToResult(BuildContext context, List result) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (context) => ResultScreen([
+                double.parse("${result[0]}.${result[1][1]}"),
+                int.parse(age.text),
+                currGender
+              ])),
+    );
+  }
+
+  void showResult(BuildContext context) {
+    resetBorder();
+    if (weight.text.isNotEmpty && age.text.isNotEmpty ||
+        (height.text.isNotEmpty ||
+            (feet.text.isNotEmpty && inches.text.isNotEmpty))) {
+      var result = calculateScore();
+      goToResult(context, result);
+    } else {
+      setState(() {
+        _isError = true;
+      });
     }
   }
 
-  void initState() {
-    super.initState();
-    print(feet.text.isEmpty);
-  }
-
-  void resetBorder(String newValue) {
+  void resetBorder([String newValue = ""]) {
     setState(() {
       weight = weight;
       height = height;
@@ -238,7 +230,7 @@ class _HomeState extends State<Home> {
                           Container(
                             decoration: BoxDecoration(
                               border: Border.all(
-                                color: _isApply && weight.text.isEmpty
+                                color: _isError && weight.text.isEmpty
                                     ? Colors.red
                                     : Colors.black,
                               ),
@@ -301,7 +293,7 @@ class _HomeState extends State<Home> {
                               ? Container(
                                   decoration: BoxDecoration(
                                     border: Border.all(
-                                      color: _isApply && height.text.isEmpty
+                                      color: _isError && height.text.isEmpty
                                           ? Colors.red
                                           : Colors.black,
                                     ),
@@ -355,7 +347,7 @@ class _HomeState extends State<Home> {
                                     Container(
                                       decoration: BoxDecoration(
                                         border: Border.all(
-                                          color: _isApply && feet.text.isEmpty
+                                          color: _isError && feet.text.isEmpty
                                               ? Colors.red
                                               : Colors.black,
                                         ),
@@ -408,7 +400,7 @@ class _HomeState extends State<Home> {
                                     Container(
                                       decoration: BoxDecoration(
                                         border: Border.all(
-                                          color: _isApply && inches.text.isEmpty
+                                          color: _isError && inches.text.isEmpty
                                               ? Colors.red
                                               : Colors.black,
                                         ),
@@ -477,7 +469,7 @@ class _HomeState extends State<Home> {
                                   Container(
                                     decoration: BoxDecoration(
                                       border: Border.all(
-                                        color: _isApply && age.text.isEmpty
+                                        color: _isError && age.text.isEmpty
                                             ? Colors.red
                                             : Colors.black,
                                       ),

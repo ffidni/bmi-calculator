@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class ResultScreen extends StatefulWidget {
-  List data;
+  final data;
   ResultScreen(this.data);
 
   @override
@@ -9,8 +9,8 @@ class ResultScreen extends StatefulWidget {
 }
 
 class _ResultScreenState extends State<ResultScreen> {
-  List data;
-  List bmiRanges1 = ["Underweight", "Normal Weight", "Overweight", "Obese"];
+  final data;
+  List bmiRanges1 = ["Underweight", "Ideal Weight", "Overweight", "Obese"];
   List bmiRanges2 = [];
   String result = "";
   bool isUnderTwenty = false;
@@ -18,17 +18,15 @@ class _ResultScreenState extends State<ResultScreen> {
   _ResultScreenState(this.data);
 
   void calculateResult(List ranges) {
-    setState(() {
-      if (data[0] < ranges[0]) {
-        result = "Underweight";
-      } else if (data[0] > ranges[0] && data[0] < ranges[1]) {
-        result = "Normal Weight";
-      } else if (data[0] > ranges[1] && data[0] < ranges[2]) {
-        result = "Overweight";
-      } else {
-        result = "Obese";
-      }
-    });
+    if (data[0] < ranges[0]) {
+      result = "Underweight";
+    } else if (data[0] > ranges[0] && data[0] < ranges[1]) {
+      result = "Ideal Weight";
+    } else if (data[0] > ranges[1] && data[0] < ranges[2]) {
+      result = "Overweight";
+    } else {
+      result = "Obese";
+    }
     bmiRanges2.add("less than ${ranges[0]}");
     bmiRanges2.add("${ranges[0]} - ${ranges[1]}");
     bmiRanges2.add("${ranges[1]} - ${ranges[2]}");
@@ -223,8 +221,8 @@ class _ResultScreenState extends State<ResultScreen> {
                                         item,
                                         style: TextStyle(
                                           fontWeight:
-                                              bmiRanges1[index] == result
-                                                  ? FontWeight.w500
+                                              result == bmiRanges1[index]
+                                                  ? FontWeight.w600
                                                   : FontWeight.normal,
                                           color: Colors.black,
                                           fontSize: 22,
@@ -250,8 +248,8 @@ class _ResultScreenState extends State<ResultScreen> {
                                         item,
                                         style: TextStyle(
                                           fontWeight:
-                                              bmiRanges1[index] == result
-                                                  ? FontWeight.w500
+                                              result == bmiRanges1[index]
+                                                  ? FontWeight.w600
                                                   : FontWeight.normal,
                                           color: Colors.black,
                                           fontSize: 22,

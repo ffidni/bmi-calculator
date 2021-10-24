@@ -1,3 +1,4 @@
+import 'package:bmi/result.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -15,7 +16,15 @@ class MyBehavior extends ScrollBehavior {
 
 class _HomeState extends State<Home> {
   List<String> measurements = ["Metric", "Imperial"];
+  List<String> genders = ["Male", "Female"];
   String currMeasurement = "Metric";
+  bool _isApply = false;
+  String currGender = "Male";
+  TextEditingController weight = TextEditingController();
+  TextEditingController height = TextEditingController();
+  TextEditingController feet = TextEditingController();
+  TextEditingController inches = TextEditingController();
+  TextEditingController age = TextEditingController();
 
   createDialog(BuildContext context) {
     return showDialog(
@@ -49,7 +58,7 @@ class _HomeState extends State<Home> {
                   icon: Icon(Icons.keyboard_arrow_down),
                   iconSize: 16,
                   onChanged: (String? newValue) {
-                    dropDownState(() {
+                    setState(() {
                       currMeasurement = newValue!;
                       if (newValue == "Metric") {
                         measurements[0] = "Metric";
@@ -58,9 +67,15 @@ class _HomeState extends State<Home> {
                         measurements[0] = "Imperial";
                         measurements[1] = "Metric";
                       }
+                      Navigator.of(context, rootNavigator: true).pop('dialog');
                     });
                     setState(() {
                       currMeasurement = newValue!;
+                      weight.clear();
+                      height.clear();
+                      feet.clear();
+                      inches.clear();
+                      age.clear();
                     });
                   },
                   items: measurements
@@ -78,6 +93,72 @@ class _HomeState extends State<Home> {
             ),
           );
         });
+  }
+
+  void showResult(BuildContext context) {
+    setState(() {
+      _isApply = true;
+      weight = weight;
+      height = height;
+      age = age;
+      feet = feet;
+      inches = inches;
+    });
+    var result;
+    if (weight.text.isNotEmpty &&
+        height.text.isNotEmpty &&
+        age.text.isNotEmpty) {
+      result = ((double.parse(weight.text) /
+                  double.parse(height.text) /
+                  double.parse(height.text)) *
+              10000)
+          .toString()
+          .split(".");
+      print(
+          "$result, ${(double.parse(weight.text) / double.parse(height.text) / double.parse(height.text)) * 10000}");
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => ResultScreen([
+                  double.parse("${result[0]}.${result[1][1]}"),
+                  int.parse(age.text),
+                  currGender
+                ])),
+      );
+    } else if (weight.text.isNotEmpty &&
+        feet.text.isNotEmpty &&
+        age.text.isNotEmpty) {
+      result = ((double.parse(weight.text) /
+                  (double.parse(feet.text) * 12) /
+                  double.parse(inches.text)) *
+              703)
+          .toString()
+          .split(".");
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => ResultScreen([
+                  double.parse("${result[0]}.${result[1][1]}"),
+                  int.parse(age.text),
+                  currGender
+                ])),
+      );
+    }
+  }
+
+  void initState() {
+    super.initState();
+    print(feet.text.isEmpty);
+  }
+
+  void resetBorder(String newValue) {
+    setState(() {
+      weight = weight;
+      height = height;
+      feet = feet;
+      inches = inches;
+      age = age;
+    });
   }
 
   @override
@@ -120,16 +201,15 @@ class _HomeState extends State<Home> {
                       width: 302,
                       height: 320,
                       decoration: BoxDecoration(
-                        color: Color(0xffC3C5C5),
-                        borderRadius: BorderRadius.all(Radius.circular(30)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
-                            blurRadius: 4,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
+                          color: Color(0xffC3C5C5),
+                          borderRadius: BorderRadius.all(Radius.circular(30)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.3),
+                              blurRadius: 4,
+                              offset: Offset(0, 4),
+                            ),
+                          ]),
                       child: Column(
                         children: <Widget>[
                           Row(
@@ -157,6 +237,11 @@ class _HomeState extends State<Home> {
                           SizedBox(height: 5),
                           Container(
                             decoration: BoxDecoration(
+                              border: Border.all(
+                                color: _isApply && weight.text.isEmpty
+                                    ? Colors.red
+                                    : Colors.black,
+                              ),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.3),
@@ -168,6 +253,8 @@ class _HomeState extends State<Home> {
                             width: 200,
                             height: 40,
                             child: TextField(
+                              controller: weight,
+                              onChanged: resetBorder,
                               keyboardType: TextInputType.numberWithOptions(
                                   decimal: true),
                               inputFormatters: [
@@ -177,18 +264,24 @@ class _HomeState extends State<Home> {
                               decoration: InputDecoration(
                                 fillColor: Color(0xffF1F1F1),
                                 filled: true,
+                                border: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                errorBorder: InputBorder.none,
+                                disabledBorder: InputBorder.none,
                                 contentPadding: EdgeInsets.only(
                                   left: 10,
-                                  bottom: 40 / 2,
+                                  top: 5,
                                 ),
                                 suffixIcon: Padding(
                                   padding: EdgeInsets.only(
                                     top: 10,
                                     left: 25,
                                   ),
-                                  child: Text("kg"),
+                                  child: Text(currMeasurement == "Metric"
+                                      ? "kg"
+                                      : "lb"),
                                 ),
-                                border: OutlineInputBorder(),
                                 hintText: "Enter your weight",
                               ),
                               autofocus: false,
@@ -204,94 +297,298 @@ class _HomeState extends State<Home> {
                             ),
                           ),
                           SizedBox(height: 5),
-                          Container(
-                            decoration: BoxDecoration(
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.3),
-                                  blurRadius: 4,
-                                  offset: Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            width: 200,
-                            height: 40,
-                            child: TextField(
-                              keyboardType: TextInputType.numberWithOptions(
-                                  decimal: true),
-                              inputFormatters: [
-                                FilteringTextInputFormatter.allow(
-                                    RegExp(r'(^\d*\.?\d*)'))
-                              ],
-                              decoration: InputDecoration(
-                                fillColor: Color(0xffF1F1F1),
-                                filled: true,
-                                contentPadding: EdgeInsets.only(
-                                  left: 10,
-                                  bottom: 40 / 2,
-                                ),
-                                suffixIcon: Padding(
-                                  padding: EdgeInsets.only(
-                                    top: 10,
-                                    left: 20,
+                          currMeasurement == "Metric"
+                              ? Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: _isApply && height.text.isEmpty
+                                          ? Colors.red
+                                          : Colors.black,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.3),
+                                        blurRadius: 4,
+                                        offset: Offset(0, 4),
+                                      ),
+                                    ],
                                   ),
-                                  child: Text("cm"),
+                                  width: 200,
+                                  height: 40,
+                                  child: TextField(
+                                    controller: height,
+                                    onChanged: resetBorder,
+                                    keyboardType:
+                                        TextInputType.numberWithOptions(
+                                            decimal: true),
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.allow(
+                                          RegExp(r'(^\d*\.?\d*)'))
+                                    ],
+                                    decoration: InputDecoration(
+                                      fillColor: Color(0xffF1F1F1),
+                                      filled: true,
+                                      border: InputBorder.none,
+                                      focusedBorder: InputBorder.none,
+                                      enabledBorder: InputBorder.none,
+                                      errorBorder: InputBorder.none,
+                                      disabledBorder: InputBorder.none,
+                                      contentPadding: EdgeInsets.only(
+                                        left: 10,
+                                        top: 5,
+                                      ),
+                                      suffixIcon: Padding(
+                                        padding: EdgeInsets.only(
+                                          top: 10,
+                                          left: 20,
+                                        ),
+                                        child: Text("cm"),
+                                      ),
+                                      hintText: "Enter your height",
+                                    ),
+                                    autofocus: false,
+                                  ),
+                                )
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: <Widget>[
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: _isApply && feet.text.isEmpty
+                                              ? Colors.red
+                                              : Colors.black,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color:
+                                                Colors.black.withOpacity(0.3),
+                                            blurRadius: 4,
+                                            offset: Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      width: 90,
+                                      height: 40,
+                                      child: TextField(
+                                        controller: feet,
+                                        onChanged: resetBorder,
+                                        keyboardType:
+                                            TextInputType.numberWithOptions(
+                                                decimal: true),
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter.allow(
+                                              RegExp(r'(^\d*\.?\d*)'))
+                                        ],
+                                        decoration: InputDecoration(
+                                          fillColor: Color(0xffF1F1F1),
+                                          filled: true,
+                                          border: InputBorder.none,
+                                          focusedBorder: InputBorder.none,
+                                          enabledBorder: InputBorder.none,
+                                          errorBorder: InputBorder.none,
+                                          disabledBorder: InputBorder.none,
+                                          contentPadding: EdgeInsets.only(
+                                            left: 10,
+                                            top: 5,
+                                          ),
+                                          suffixIcon: Padding(
+                                            padding: EdgeInsets.only(
+                                              top: 10,
+                                              left: 20,
+                                            ),
+                                            child: Text("ft"),
+                                          ),
+                                          hintText: "feet",
+                                        ),
+                                        autofocus: false,
+                                      ),
+                                    ),
+                                    SizedBox(width: 20),
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: _isApply && inches.text.isEmpty
+                                              ? Colors.red
+                                              : Colors.black,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color:
+                                                Colors.black.withOpacity(0.3),
+                                            blurRadius: 4,
+                                            offset: Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      width: 90,
+                                      height: 40,
+                                      child: TextField(
+                                        controller: inches,
+                                        onChanged: resetBorder,
+                                        keyboardType:
+                                            TextInputType.numberWithOptions(
+                                                decimal: true),
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter.allow(
+                                              RegExp(r'(^\d*\.?\d*)'))
+                                        ],
+                                        decoration: InputDecoration(
+                                          fillColor: Color(0xffF1F1F1),
+                                          filled: true,
+                                          border: InputBorder.none,
+                                          focusedBorder: InputBorder.none,
+                                          enabledBorder: InputBorder.none,
+                                          errorBorder: InputBorder.none,
+                                          disabledBorder: InputBorder.none,
+                                          contentPadding: EdgeInsets.only(
+                                            left: 10,
+                                            top: 5,
+                                          ),
+                                          suffixIcon: Padding(
+                                            padding: EdgeInsets.only(
+                                              top: 10,
+                                              left: 20,
+                                            ),
+                                            child: Text("in"),
+                                          ),
+                                          hintText: "inch",
+                                        ),
+                                        autofocus: false,
+                                      ),
+                                    )
+                                  ],
                                 ),
-                                border: OutlineInputBorder(),
-                                hintText: "Enter your height",
-                              ),
-                              autofocus: false,
-                            ),
-                          ),
                           SizedBox(height: 10),
-                          Text(
-                            "Age",
-                            style: TextStyle(
-                              fontFamily: "Roboto",
-                              fontSize: 20,
-                              color: Color(0xff322E2E),
-                            ),
-                          ),
-                          SizedBox(height: 5),
-                          Container(
-                            decoration: BoxDecoration(
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.3),
-                                  blurRadius: 4,
-                                  offset: Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            width: 200,
-                            height: 40,
-                            child: TextField(
-                              keyboardType: TextInputType.numberWithOptions(
-                                  decimal: true),
-                              inputFormatters: [
-                                FilteringTextInputFormatter.allow(
-                                    RegExp(r'(^\d*\.?\d*)'))
-                              ],
-                              decoration: InputDecoration(
-                                fillColor: Color(0xffF1F1F1),
-                                filled: true,
-                                contentPadding: EdgeInsets.only(
-                                  left: 10,
-                                  bottom: 40 / 2,
-                                ),
-                                suffixIcon: Padding(
-                                  padding: EdgeInsets.only(
-                                    top: 10,
-                                    left: 15,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Column(
+                                children: <Widget>[
+                                  Text(
+                                    "Age",
+                                    style: TextStyle(
+                                      fontFamily: "Roboto",
+                                      fontSize: 20,
+                                      color: Color(0xff322E2E),
+                                    ),
                                   ),
-                                  child: Text("year"),
-                                ),
-                                border: OutlineInputBorder(),
-                                hintText: "Enter your age",
+                                  SizedBox(height: 5),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: _isApply && age.text.isEmpty
+                                            ? Colors.red
+                                            : Colors.black,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.3),
+                                          blurRadius: 4,
+                                          offset: Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    width: 90,
+                                    height: 40,
+                                    child: TextField(
+                                      controller: age,
+                                      onChanged: resetBorder,
+                                      keyboardType:
+                                          TextInputType.numberWithOptions(
+                                              decimal: true),
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.allow(
+                                            RegExp(r'(^\d*\.?\d*)'))
+                                      ],
+                                      decoration: InputDecoration(
+                                        fillColor: Color(0xffF1F1F1),
+                                        filled: true,
+                                        border: InputBorder.none,
+                                        focusedBorder: InputBorder.none,
+                                        enabledBorder: InputBorder.none,
+                                        errorBorder: InputBorder.none,
+                                        disabledBorder: InputBorder.none,
+                                        contentPadding: EdgeInsets.only(
+                                          left: 10,
+                                          top: 5,
+                                        ),
+                                        suffixIcon: Padding(
+                                          padding: EdgeInsets.only(
+                                            top: 10,
+                                            left: 15,
+                                          ),
+                                          child: Text("year"),
+                                        ),
+                                        hintText: "age",
+                                      ),
+                                      autofocus: false,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              autofocus: false,
-                            ),
-                          )
+                              SizedBox(width: 20),
+                              Column(
+                                children: [
+                                  Text(
+                                    "Gender",
+                                    style: TextStyle(
+                                      fontFamily: "Roboto",
+                                      fontSize: 20,
+                                      color: Color(0xff322E2E),
+                                    ),
+                                  ),
+                                  SizedBox(height: 5),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Color(0xffF1F1F1),
+                                      border: Border.all(color: Colors.black),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.3),
+                                          blurRadius: 4,
+                                          offset: Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    width: 90,
+                                    height: 40,
+                                    child: DropdownButton(
+                                      isExpanded: true,
+                                      underline: SizedBox(),
+                                      value: currGender,
+                                      icon: Icon(Icons.keyboard_arrow_down),
+                                      iconSize: 16,
+                                      onChanged: (String? newValue) {
+                                        setState(() {
+                                          currGender = newValue!;
+                                          if (newValue == "Male") {
+                                            genders[1] = "Female";
+                                            genders[0] = "Male";
+                                          } else {
+                                            genders[1] = "Male";
+                                            genders[0] = "Female";
+                                          }
+                                        });
+                                      },
+                                      items: genders
+                                          .map<DropdownMenuItem<String>>(
+                                              (String value) {
+                                        return DropdownMenuItem<String>(
+                                          value: value,
+                                          child: Padding(
+                                            padding: const EdgeInsets.fromLTRB(
+                                                10, 0, 0, 0),
+                                            child: Text(value),
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -319,7 +616,7 @@ class _HomeState extends State<Home> {
                               fontSize: 16,
                             ),
                           ),
-                          onPressed: () {},
+                          onPressed: () => showResult(context),
                           style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all(
                               Color(0xffECECEC),

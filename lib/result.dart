@@ -36,7 +36,7 @@ class _ResultScreenState extends State<ResultScreen> {
   @override
   void initState() {
     super.initState();
-    if (data[1] >= 2 && data[1] <= 20) {
+    if (data[1] >= 0 && data[1] <= 20) {
       isUnderTwenty = true;
       switch (data[1]) {
         case 2:

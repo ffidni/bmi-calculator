@@ -94,7 +94,7 @@ class _HomeState extends State<Home> {
   }
 
   List calculateScore() {
-    List result = [];
+    dynamic result;
     if (weight.text.isNotEmpty &&
         height.text.isNotEmpty &&
         age.text.isNotEmpty) {
@@ -102,17 +102,20 @@ class _HomeState extends State<Home> {
                   double.parse(height.text) /
                   double.parse(height.text)) *
               10000)
-          .toString()
-          .split(".");
+          .toString();
     } else if (weight.text.isNotEmpty &&
         feet.text.isNotEmpty &&
         age.text.isNotEmpty) {
-      result = ((double.parse(weight.text) /
-                  (double.parse(feet.text) * 12) /
-                  double.parse(inches.text)) *
-              703)
-          .toString()
-          .split(".");
+      double heightValue =
+          (double.parse(feet.text) * 12) + double.parse(inches.text);
+      result = ((double.parse(weight.text) / heightValue / heightValue) * 703)
+          .toString();
+    }
+
+    if (result.contains(".")) {
+      result = result.split(".");
+    } else {
+      result = [result];
     }
     return result;
   }
@@ -122,7 +125,8 @@ class _HomeState extends State<Home> {
       context,
       MaterialPageRoute(
           builder: (context) => ResultScreen([
-                double.parse("${result[0]}.${result[1][1]}"),
+                double.parse(
+                    "${result[0]}.${result[1].length > 1 ? result[1][1] : result[1]}"),
                 int.parse(age.text),
                 currGender
               ])),
